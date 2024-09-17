@@ -1,0 +1,72 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  namespace: default
+  name: Application Demo
+  title: Application Demo
+  tags:
+    - dynamic
+    - catalogmetadata
+spec:
+  owner: maher.gzam@harness.io
+  type: environment
+  parameters:
+    - title: Fill in some steps
+      properties:
+        token:
+          title: Harness Token
+          type: string
+          ui:widget: password
+          ui:field: HarnessAuthToken      
+        appID:
+          title: Application ID
+          type: string
+          description: Application ID for this service request
+          ui:field: EntityFieldPicker
+          ui:displayField: metadata.appID
+          ui:options:
+            catalogFilter:
+              - kind: Component
+                spec.type: website        
+      dependencies:
+        appID:
+          allOf:
+            - if:
+                properties:
+                  appID:
+                    const: tag1
+              then:
+                properties:
+                  instance:
+                    title: Jenkins Instance
+                    type: string
+                    description: Which server should the reqyest run on?
+                    enum:
+                      - server1
+            - if:
+                properties:
+                  appID:
+                    const: tag2
+              then:
+                properties:
+                  jenkinsInstance:
+                    title: Jenkins Instance
+                    type: string
+                    description: Which server should the reqyest run on?
+                    enum:
+                      - server2
+                      - server3                  
+  steps:
+    - id: trigger
+      name: Requesting resource
+      action: trigger:harness-custom-pipeline
+      input:
+        url: https://app.harness.io/ng/account/6_vVHzo9Qeu9fXvj-AcbCQ/home/orgs/SE_Sandbox/projects/Cassie_Sandbox/pipelines/Dynamic_Form_Inputs/pipeline-studio/?storeType=INLINE
+        inputset:
+          appID: ${{ parameters.appID }}
+          jenkinsInstance: ${{ parameters.jenkinsInstance }}
+        apikey: ${{ parameters.token }}
+  output:
+    links:
+      - title: Pipeline Details
+        url: ${{ steps.trigger.output.PipelineUrl }}
